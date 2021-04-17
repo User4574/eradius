@@ -1,0 +1,27 @@
+h1. eradius
+
+h2. What?
+
+p. eradius (pronounced "irradius" like irradiate) is a fledgling RFC2865 authentication server that I wrote in Erlang.
+
+h2. Why?
+
+p. Why do you think? I was bored.
+
+h2. Status
+
+p. It currently only support a single secret, and authenticates users against a local DB.
+
+p. On the other hand it should be stupidly performant, because the config gets compiled in to the bytecode at consult-time, and it is built to make good use of SMP. I need to benchmark this.
+
+p. But also the code is AWFUL at the moment.
+
+h2. How?
+
+bc. $ erl
+1> c(eradius).
+{ok, eradius}
+2> eradius:start().
+{ok,eradius,<PID>}
+3> eradius:stop().
+stop
