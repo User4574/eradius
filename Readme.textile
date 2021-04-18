@@ -19,9 +19,9 @@ p. But also the code is AWFUL at the moment.
 h2. How?
 
 bc. $ erl
-1> c(eradius).
-{ok, eradius}
-2> eradius:start().
-{ok,eradius,<PID>}
-3> eradius:stop().
-stop
+1> c(er_packet).
+2> c(er_tlv).
+3> c(er_auth).
+4> c(eradius).
+5> eradius:start().
+6> eradius:stop().
