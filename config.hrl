@@ -3,5 +3,6 @@
 -define(secret, <<"xyzzy5461">>).
 
 -define(localdb, [
-                  {<<"nemo">>, <<"arctangent">>}
+                  {<<"nemo">>, <<"arctangent">>, false, false},
+                  {<<"mopsy">>, <<"challenge">>, <<"32769430">>, <<"99101462">>}
                  ]).

@@ -54,44 +54,62 @@ handler(_Socket, _IP, _Port, _Data) ->
   gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response)).
 
 respond(#packet{
-          code=?access_request,
-          identifier=Identifier,
-          authenticator=Request_Auth,
-          attributes=Request_Attributes
+          code          = ?access_request,
+          identifier    = Identifier,
+          authenticator = Request_Auth,
+          attributes    = Request_Attributes
          }) ->
-  #tlv{value=UserName} = er_tlv:get_attr(?user_name, Request_Attributes),
-  #tlv{value=UserPasswordCT} = er_tlv:get_attr(?user_password, Request_Attributes),
+  UserName = er_tlv:get_attr(?user_name, Request_Attributes),
+  UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
   UserPassword = er_auth:decrypt_password(UserPasswordCT, ?secret, Request_Auth, <<>>),
-  io:format("Got User-Password: ~p~n", [UserPassword]),
-  case lists:member({UserName, UserPassword}, ?localdb) of
-    true ->
-      accept(Identifier, Request_Auth);
+  State = er_tlv:get_attr(?state, Request_Attributes),
+  case State of
+    false ->
+      case lists:search(fun(Auth_Pol) ->
+                            {UN, UP, _, _} = Auth_Pol,
+                            (UN =:= UserName) and (UP =:= UserPassword)
+                        end, ?localdb) of
+        {value, {UserName, UserPassword, false, false}} ->
+          accept(Identifier, Request_Auth);
+        {value, {UserName, UserPassword, Challenge, _}} ->
+          challenge(Identifier, Request_Auth, Challenge);
+        false ->
+          reject(Identifier, Request_Auth)
+      end;
     _ ->
-      reject(Identifier, Request_Auth)
+      case lists:search(fun(Auth_Pol) ->
+                            {UN, _, _, CR} = Auth_Pol,
+                            (UN =:= UserName) and (CR =:= UserPassword)
+                        end, ?localdb) of
+        {value, {UserName, _, State, UserPassword}} ->
+          accept(Identifier, Request_Auth);
+        false ->
+          reject(Identifier, Request_Auth)
+      end
   end.
 
 accept(Identifier, Request_Auth) ->
   Response_Attributes = [
                          #tlv{
-                            type=?service_type,
-                            length=6,
-                            value=?login
+                            type   = ?service_type,
+                            length = 6,
+                            value  = ?login
                            },
                          #tlv{
-                            type=?login_service,
-                            length=6,
-                            value=?telnet
+                            type   = ?login_service,
+                            length = 6,
+                            value  = ?telnet
                            },
                          #tlv{
-                            type=?login_ip_host,
-                            length=6,
-                            value = <<192,168,1,3>>
+                            type   = ?login_ip_host,
+                            length = 6,
+                            value  = <<192,168,1,3>>
                            }
                         ],
   Fledgling_Packet = #packet{
-     code=?access_accept,
-     identifier=Identifier,
-     attributes=Response_Attributes
+     code       = ?access_accept,
+     identifier = Identifier,
+     attributes = Response_Attributes
     },
   Length = packet_length(Fledgling_Packet),
   Response_Auth = er_auth:response_auth(
@@ -102,15 +120,15 @@ accept(Identifier, Request_Auth) ->
                     Response_Attributes,
                     ?secret),
   Fledgling_Packet#packet{
-    length=Length,
-    authenticator=Response_Auth
+    length        = Length,
+    authenticator = Response_Auth
    }.
 
 reject(Identifier, Request_Auth) ->
   Fledgling_Packet = #packet{
-     code=?access_reject,
-     identifier=Identifier,
-     attributes=[]
+     code       = ?access_reject,
+     identifier = Identifier,
+     attributes = []
     },
   Length = packet_length(Fledgling_Packet),
   Response_Auth = er_auth:response_auth(
@@ -121,6 +139,37 @@ reject(Identifier, Request_Auth) ->
                     [],
                     ?secret),
   Fledgling_Packet#packet{
-    length=Length,
-    authenticator=Response_Auth
+    length        = Length,
+    authenticator = Response_Auth
+   }.
+
+challenge(Identifier, Request_Auth, Challenge) ->
+  Response_Attributes = [
+                         #tlv{
+                            type   = ?reply_message,
+                            length = 48,
+                            value  = <<"Challenge ", Challenge/binary, ".  Enter response at prompt.">>
+                           },
+                         #tlv{
+                            type   = ?state,
+                            length = byte_size(Challenge) + 2,
+                            value  = Challenge
+                           }
+                        ],
+  Fledgling_Packet = #packet{
+     code       = ?access_challenge,
+     identifier = Identifier,
+     attributes = Response_Attributes
+    },
+  Length = packet_length(Fledgling_Packet),
+  Response_Auth = er_auth:response_auth(
+                    ?access_challenge,
+                    Identifier,
+                    Length,
+                    Request_Auth,
+                    Response_Attributes,
+                    ?secret),
+  Fledgling_Packet#packet{
+    length        = Length,
+    authenticator = Response_Auth
    }.

@@ -41,6 +41,8 @@
 -define(service_type, 6).
 -define(login_ip_host, 14).
 -define(login_service, 15).
+-define(reply_message, 18).
+-define(state, 24).
 -define(message_authenticator, 80).
 
 %%% Service types
