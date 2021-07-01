@@ -4,7 +4,7 @@
 
 -import(er_packet, [unpack/1, pack/1, packet_length/1]).
 -import(er_tlv, [parse_tlvs/2, deparse_tlvs/2]).
--import(er_auth, [response_auth/6, decrypt_password/4]).
+-import(er_auth, [response_auth/6, decrypt_password/3]).
 
 -include("eradius.hrl").
 -include("config.hrl").
@@ -49,19 +49,25 @@ despatcher(Socket) ->
 handler(_Socket, _IP, _Port, _Data) ->
   Request = er_packet:unpack(_Data),
   io:format("Got packet:~n~p~n", [Request]),
-  Response = respond(Request),
-  io:format("Returning packet:~n~p~n", [Response]),
-  gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response)).
+  SecretR = lists:keyfind(_IP, #client.host, ?secretdb),
+  case SecretR of
+    false ->
+      io:format("Incoming request source IP does not match any client in the database.~n");
+    #client{secret = Secret} ->
+      Response = respond(Secret, Request),
+      io:format("Returning packet:~n~p~n", [Response]),
+      gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response))
+  end.
 
-respond(#packet{
-          code          = ?access_request,
-          identifier    = Identifier,
-          authenticator = Request_Auth,
-          attributes    = Request_Attributes
-         }) ->
+respond(Secret, #packet{
+                   code          = ?access_request,
+                   identifier    = Identifier,
+                   authenticator = Request_Auth,
+                   attributes    = Request_Attributes
+                  }) ->
   UserName = er_tlv:get_attr(?user_name, Request_Attributes),
   UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
-  UserPassword = er_auth:decrypt_password(UserPasswordCT, ?secret, Request_Auth, <<>>),
+  UserPassword = er_auth:decrypt_password(UserPasswordCT, Secret, Request_Auth),
   State = er_tlv:get_attr(?state, Request_Attributes),
   case State of
     false ->
@@ -70,11 +76,11 @@ respond(#packet{
                             (UN =:= UserName) and (UP =:= UserPassword)
                         end, ?localdb) of
         {value, {UserName, UserPassword, false, false}} ->
-          accept(Identifier, Request_Auth);
+          accept(Identifier, Secret, Request_Auth);
         {value, {UserName, UserPassword, Challenge, _}} ->
-          challenge(Identifier, Request_Auth, Challenge);
+          challenge(Identifier, Secret, Request_Auth, Challenge);
         false ->
-          reject(Identifier, Request_Auth)
+          reject(Identifier, Secret, Request_Auth)
       end;
     _ ->
       case lists:search(fun(Auth_Pol) ->
@@ -82,13 +88,13 @@ respond(#packet{
                             (UN =:= UserName) and (CR =:= UserPassword)
                         end, ?localdb) of
         {value, {UserName, _, State, UserPassword}} ->
-          accept(Identifier, Request_Auth);
+          accept(Identifier, Secret, Request_Auth);
         false ->
-          reject(Identifier, Request_Auth)
+          reject(Identifier, Secret, Request_Auth)
       end
   end.
 
-accept(Identifier, Request_Auth) ->
+accept(Identifier, Secret, Request_Auth) ->
   Response_Attributes = [
                          #tlv{
                             type   = ?service_type,
@@ -118,13 +124,13 @@ accept(Identifier, Request_Auth) ->
                     Length,
                     Request_Auth,
                     Response_Attributes,
-                    ?secret),
+                    Secret),
   Fledgling_Packet#packet{
     length        = Length,
     authenticator = Response_Auth
    }.
 
-reject(Identifier, Request_Auth) ->
+reject(Identifier, Secret, Request_Auth) ->
   Fledgling_Packet = #packet{
      code       = ?access_reject,
      identifier = Identifier,
@@ -137,13 +143,13 @@ reject(Identifier, Request_Auth) ->
                     Length,
                     Request_Auth,
                     [],
-                    ?secret),
+                    Secret),
   Fledgling_Packet#packet{
     length        = Length,
     authenticator = Response_Auth
    }.
 
-challenge(Identifier, Request_Auth, Challenge) ->
+challenge(Identifier, Secret, Request_Auth, Challenge) ->
   Response_Attributes = [
                          #tlv{
                             type   = ?reply_message,
@@ -168,7 +174,7 @@ challenge(Identifier, Request_Auth, Challenge) ->
                     Length,
                     Request_Auth,
                     Response_Attributes,
-                    ?secret),
+                    Secret),
   Fledgling_Packet#packet{
     length        = Length,
     authenticator = Response_Auth

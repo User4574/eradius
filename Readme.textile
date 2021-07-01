@@ -10,7 +10,7 @@ p. Why do you think? I was bored.
 
 h2. Status
 
-p. It currently only support a single secret, and authenticates users against a local DB.
+p. It currently only authenticates users against a local DB.
 
 p. On the other hand it should be stupidly performant, because the config gets compiled in to the bytecode at consult-time, and it is built to make good use of SMP. I need to benchmark this.
 

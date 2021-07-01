@@ -1,6 +1,6 @@
 -module(er_auth).
 
--export([response_auth/6, decrypt_password/4]).
+-export([response_auth/6, decrypt_password/3]).
 
 -import(er_tlv, [deparse_tlvs/2]).
 
@@ -16,6 +16,8 @@ response_auth(Code, Identifier, Length, Request_Auth, Response_Attributes, Secre
                    >>
              ).
 
+decrypt_password(CipherText, Secret, Key) ->
+  decrypt_password(CipherText, Secret, Key, <<>>).
 decrypt_password(<<>>, _, _, Acc) ->
   list_to_binary(
     lists:reverse(
