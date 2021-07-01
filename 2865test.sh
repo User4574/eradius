@@ -25,6 +25,18 @@ function run_test {
   fi
 }
 
+# Freeradius bugs mean this doesnt work
+# See issue https://github.com/FreeRADIUS/freeradius-server/issues/887
+# You wouldnt see this kind of jank in eradius!
+#
+#describe_test Unconfigured client should sliently discard
+#run_test fail radclient -x -r 1 localhost auth fake <<.
+#User-Name = nemo
+#User-Password = arctan
+#Packet-Src-IP-Address = 192.0.2.1/32
+#.
+#echo
+
 describe_test Example 7.1. User Telnet to Specified Host
 run_test succeed radtest nemo arctangent localhost 3 xyzzy5461
 echo
