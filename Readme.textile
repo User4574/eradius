@@ -22,6 +22,7 @@ bc. $ erl
 1> c(er_packet).
 2> c(er_tlv).
 3> c(er_auth).
-4> c(eradius).
-5> eradius:start().
-6> eradius:stop().
+4> c(er_conv).
+5> c(eradius).
+6> eradius:start().
+7> eradius:stop().
