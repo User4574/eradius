@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 t=1
+s=0
 
 function describe_test {
   echo "=== Test #$t:" $*
@@ -13,15 +14,21 @@ function run_test {
   if [[ $pos == succeed ]]; then
     echo === Execute: $*
     echo === Expect: Succeed
-    $* \
-      && echo "✓✓✓ Test succeeded." \
-      || echo "✗✗✗ Test failed."
+    if $*; then
+      echo "✓✓✓ Test succeeded."
+      s=$((s + 1))
+    else
+      echo "✗✗✗ Test failed."
+    fi
   else
     echo === Execute: $*
     echo === Expect: Fail
-    $* \
-      && echo "✗✗✗ Test succeeded." \
-      || echo "✓✓✓ Test failed."
+    if $*; then
+      echo "✗✗✗ Test succeeded."
+    else
+      echo "✓✓✓ Test failed."
+      s=$((s + 1))
+    fi
   fi
 }
 
@@ -52,3 +59,6 @@ User-Name = mopsy
 User-Password = 99101462
 State = 0x3332373639343330
 .
+
+echo
+echo "Result: $s out of $t tests succeeded."
