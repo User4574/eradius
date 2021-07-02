@@ -11,6 +11,17 @@
           secret
          }).
 
+-record(user, {
+          name,
+          mfa
+         }).
+
+-record(mfa, {
+          module,
+          function,
+          args
+         }).
+
 %%% RADIUS packet
 -record(packet, {
           code,

@@ -1,8 +1,12 @@
 -module(er_auth).
 
 -export([response_auth/6, decrypt_password/3]).
+-export([with_local_password/5, with_local_challenge/6]).
 
--import(er_tlv, [deparse_tlvs/2]).
+-import(er_tlv, [deparse_tlvs/2, get_attr/2]).
+-import(er_conv, [accept/3, reject/3, challenge/4]).
+
+-include("eradius.hrl").
 
 response_auth(Code, Identifier, Length, Request_Auth, Response_Attributes, Secret) ->
   Deparsed_TLVs = er_tlv:deparse_tlvs(Response_Attributes, <<>>),
@@ -36,3 +40,28 @@ decrypt_password(<<C:16/binary, Rest/binary>>, Secret, Key, Acc) ->
   Pi = Bi bxor Ci,
   P = <<Pi:16/integer-unit:8>>,
   decrypt_password(Rest, Secret, C, <<Acc/binary, P/binary>>).
+
+with_local_password(Identifier, Secret, Request_Auth, Request_Attributes, Password) ->
+  UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
+  UserPassword = decrypt_password(UserPasswordCT, Secret, Request_Auth),
+  case UserPassword =:= Password of
+    true ->
+      er_conv:accept(Identifier, Secret, Request_Auth);
+    false ->
+      er_conv:reject(Identifier, Secret, Request_Auth)
+  end.
+
+with_local_challenge(Identifier, Secret, Request_Auth, Request_Attributes, Challenge, Response) ->
+  case er_tlv:get_attr(?state, Request_Attributes) of
+    false ->
+      er_conv:challenge(Identifier, Secret, Request_Auth, Challenge);
+    Challenge ->
+      UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
+      UserPassword = decrypt_password(UserPasswordCT, Secret, Request_Auth),
+      case UserPassword =:= Response of
+        true ->
+          er_conv:accept(Identifier, Secret, Request_Auth);
+        false ->
+          er_conv:reject(Identifier, Secret, Request_Auth)
+      end
+  end.

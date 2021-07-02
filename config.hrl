@@ -7,7 +7,21 @@
                      }
                   ]).
 
--define(localdb, [
-                  {<<"nemo">>, <<"arctangent">>, false, false},
-                  {<<"mopsy">>, <<"challenge">>, <<"32769430">>, <<"99101462">>}
-                 ]).
+-define(userdb, [
+                 #user{
+                    name = <<"nemo">>,
+                    mfa = #mfa{
+                             module = er_auth,
+                             function = with_local_password,
+                             args = [<<"arctangent">>]
+                            }
+                   },
+                 #user{
+                    name = <<"mopsy">>,
+                    mfa = #mfa{
+                             module = er_auth,
+                             function = with_local_challenge,
+                             args = [<<"32769430">>, <<"99101462">>]
+                            }
+                   }
+                ]).
