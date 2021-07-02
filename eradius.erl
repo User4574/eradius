@@ -11,7 +11,7 @@ start() ->
   start(?process_name).
 
 start(Name) ->
-  case start_server() of
+  case start_server(?listener) of
     {ok, PID} ->
       register(Name, PID),
       {ok, Name, PID};
@@ -25,8 +25,8 @@ stop() ->
 stop(PIDy) ->
   PIDy ! stop.
 
-start_server() ->
-  case gen_udp:open(?listening_port, [{active, true}, binary]) of
+start_server(#listen{host = Host, auth_port = AuthPort}) ->
+  case gen_udp:open(AuthPort, [{ip, Host}, {active, true}, binary]) of
     {ok, Socket} ->
       PID = spawn(fun() -> despatcher(Socket) end),
       gen_udp:controlling_process(Socket, PID),

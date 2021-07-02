@@ -1,4 +1,8 @@
--define(listening_port, 1812).
+-define(listener, #listen{
+                     host = {127, 0, 0, 1},
+                     auth_port = 1812,
+                     acct_port = 1813
+                    }).
 
 -define(secretdb, [
                    #client{
