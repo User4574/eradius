@@ -18,11 +18,7 @@ p. But also the code is AWFUL at the moment.
 
 h2. How?
 
-bc. $ erl
-1> c(er_packet).
-2> c(er_tlv).
-3> c(er_auth).
-4> c(er_conv).
-5> c(eradius).
-6> eradius:start().
-7> eradius:stop().
+bc. $ make run
+% do auths
+1> eradius:stop().
+2> q().
