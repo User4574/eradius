@@ -52,9 +52,13 @@ handler(_Socket, _IP, _Port, _Data) ->
     false ->
       io:format("Incoming request source IP does not match any client in the database.~n");
     #client{secret = Secret} ->
-      Response = respond(Secret, Request),
-      io:format("Returning packet:~n~p~n", [Response]),
-      gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response))
+      case respond(Secret, Request) of
+        {ok, Response} ->
+          io:format("Returning packet:~n~p~n", [Response]),
+          gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response));
+        {error, Reason} ->
+          io:format("Error, not responding:~n~p~n", [Reason])
+      end.
   end.
 
 respond(Secret, #packet{
@@ -67,7 +71,7 @@ respond(Secret, #packet{
   case lists:keyfind(UserName, #user.name, ?userdb) of
     false ->
       io:format("Incoming request username does not match any user in userdb.~n"),
-      er_conv:reject(Identifier, Secret, Request_Auth);
+      {ok, er_conv:reject(Identifier, Secret, Request_Auth)};
     #user{mfa = #mfa{module = Module, function = Function, args = Args}} ->
       apply(Module, Function, [Identifier, Secret, Request_Auth, Request_Attributes | Args])
   end.

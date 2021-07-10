@@ -6,15 +6,17 @@ p. eradius (pronounced "irradius" like irradiate) is a fledgling RFC2865 authent
 
 h2. Why?
 
-p. Why do you think? I was bored.
+p. I was bored.
 
 h2. Status
 
-p. It currently only authenticates users against a local DB.
+p. It currently only authenticates users against a local DB, but the flexibility should be in to start adding auth modules.
+
+p. It currently doesn't do authorisation or accounting.
 
 p. On the other hand it should be stupidly performant, because the config gets compiled in to the bytecode at consult-time, and it is built to make good use of SMP. I need to benchmark this.
 
-p. But also the code is AWFUL at the moment.
+p. But also the code is -AWFUL at the moment- getting better.
 
 h2. How?
 

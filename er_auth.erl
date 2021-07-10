@@ -46,22 +46,22 @@ with_local_password(Identifier, Secret, Request_Auth, Request_Attributes, Passwo
   UserPassword = decrypt_password(UserPasswordCT, Secret, Request_Auth),
   case UserPassword =:= Password of
     true ->
-      er_conv:accept(Identifier, Secret, Request_Auth);
+      {ok, er_conv:accept(Identifier, Secret, Request_Auth)};
     false ->
-      er_conv:reject(Identifier, Secret, Request_Auth)
+      {ok, er_conv:reject(Identifier, Secret, Request_Auth)}
   end.
 
 with_local_challenge(Identifier, Secret, Request_Auth, Request_Attributes, Challenge, Response) ->
   case er_tlv:get_attr(?state, Request_Attributes) of
     false ->
-      er_conv:challenge(Identifier, Secret, Request_Auth, Challenge);
+      {ok, er_conv:challenge(Identifier, Secret, Request_Auth, Challenge)};
     Challenge ->
       UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
       UserPassword = decrypt_password(UserPasswordCT, Secret, Request_Auth),
       case UserPassword =:= Response of
         true ->
-          er_conv:accept(Identifier, Secret, Request_Auth);
+          {ok, er_conv:accept(Identifier, Secret, Request_Auth)};
         false ->
-          er_conv:reject(Identifier, Secret, Request_Auth)
+          {ok, er_conv:reject(Identifier, Secret, Request_Auth)}
       end
   end.
