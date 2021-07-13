@@ -13,7 +13,8 @@
 
 -record(user, {
           name,
-          mfa
+          authenticate,
+          authorise
          }).
 
 -record(mfa, {

@@ -58,7 +58,7 @@ handler(_Socket, _IP, _Port, _Data) ->
           gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response));
         {error, Reason} ->
           io:format("Error, not responding:~n~p~n", [Reason])
-      end.
+      end
   end.
 
 respond(Secret, #packet{
@@ -72,6 +72,6 @@ respond(Secret, #packet{
     false ->
       io:format("Incoming request username does not match any user in userdb.~n"),
       {ok, er_conv:reject(Identifier, Secret, Request_Auth)};
-    #user{mfa = #mfa{module = Module, function = Function, args = Args}} ->
+    #user{authenticate = #mfa{module = Module, function = Function, args = Args}} ->
       apply(Module, Function, [Identifier, Secret, Request_Auth, Request_Attributes | Args])
   end.

@@ -2,8 +2,6 @@
 
 -export([unpack/1, pack/1, packet_length/1]).
 
--import(er_tlv, [deparse_tlvs/2]).
-
 -include("eradius.hrl").
 
 unpack(<<

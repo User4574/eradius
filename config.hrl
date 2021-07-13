@@ -14,18 +14,28 @@
 -define(userdb, [
                  #user{
                     name = <<"nemo">>,
-                    mfa = #mfa{
-                             module = er_auth,
-                             function = with_local_password,
-                             args = [<<"arctangent">>]
-                            }
+                    authenticate = #mfa{
+                                      module = er_aaa,
+                                      function = local_password,
+                                      args = [<<"arctangent">>]
+                                     },
+                    authorise = #mfa{
+                                   module = er_aaa,
+                                   function = ok,
+                                   args = []
+                                  }
                    },
                  #user{
                     name = <<"mopsy">>,
-                    mfa = #mfa{
-                             module = er_auth,
-                             function = with_local_challenge,
-                             args = [<<"32769430">>, <<"99101462">>]
-                            }
+                    authenticate = #mfa{
+                                      module = er_aaa,
+                                      function = local_challenge,
+                                      args = [<<"32769430">>, <<"99101462">>]
+                                     },
+                    authorise = #mfa{
+                                   module = er_aaa,
+                                   function = ok,
+                                   args = []
+                                  }
                    }
                 ]).
