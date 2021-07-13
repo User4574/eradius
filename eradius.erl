@@ -2,8 +2,6 @@
 
 -export([start/0, stop/0]).
 
--import(er_packet, [unpack/1, pack/1]).
-
 -include("eradius.hrl").
 -include("config.hrl").
 

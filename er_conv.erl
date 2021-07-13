@@ -2,9 +2,6 @@
 
 -export([accept/3, reject/3, challenge/4]).
 
--import(er_packet, [packet_length/1]).
--import(er_auth, [response_auth/6]).
-
 -include("eradius.hrl").
 
 accept(Identifier, Secret, Request_Auth) ->
@@ -31,7 +28,7 @@ accept(Identifier, Secret, Request_Auth) ->
      attributes = Response_Attributes
     },
   Length = er_packet:packet_length(Fledgling_Packet),
-  Response_Auth = er_auth:response_auth(
+  Response_Auth = er_crypto:response_auth(
                     ?access_accept,
                     Identifier,
                     Length,
@@ -50,7 +47,7 @@ reject(Identifier, Secret, Request_Auth) ->
      attributes = []
     },
   Length = er_packet:packet_length(Fledgling_Packet),
-  Response_Auth = er_auth:response_auth(
+  Response_Auth = er_crypto:response_auth(
                     ?access_reject,
                     Identifier,
                     Length,
@@ -81,7 +78,7 @@ challenge(Identifier, Secret, Request_Auth, Challenge) ->
      attributes = Response_Attributes
     },
   Length = er_packet:packet_length(Fledgling_Packet),
-  Response_Auth = er_auth:response_auth(
+  Response_Auth = er_crypto:response_auth(
                     ?access_challenge,
                     Identifier,
                     Length,

@@ -2,8 +2,6 @@
 
 -export([response_auth/6, decrypt_password/3]).
 
--import(er_tlv, [deparse_tlvs/2]).
-
 -include("eradius.hrl").
 
 response_auth(Code, Identifier, Length, Request_Auth, Response_Attributes, Secret) ->
