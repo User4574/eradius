@@ -65,11 +65,48 @@ respond(Secret, #packet{
                    authenticator = Request_Auth,
                    attributes    = Request_Attributes
                   }) ->
-  UserName = er_tlv:get_attr(?user_name, Request_Attributes),
+  Request_Facts = er_tlv:cook_facts(Secret, Request_Auth, er_tlv:tlvs_to_facts(Request_Attributes)),
+  UserName = er_tlv:get_fact(tlv, ?user_name, Request_Facts),
   case lists:keyfind(UserName, #user.name, ?userdb) of
     false ->
       io:format("Incoming request username does not match any user in userdb.~n"),
       {ok, er_conv:reject(Identifier, Secret, Request_Auth)};
-    #user{authenticate = #mfa{module = Module, function = Function, args = Args}} ->
-      apply(Module, Function, [Identifier, Secret, Request_Auth, Request_Attributes | Args])
+    #user{ aaa_steps = AAA_Steps } ->
+      Computed_Facts = chain_aaa_steps(Identifier, Secret, Request_Auth, AAA_Steps, Request_Facts),
+      make_decision(Identifier, Secret, Request_Auth, Computed_Facts)
+  end.
+
+chain_aaa_steps(_, _, _, [], Facts) ->
+  Facts;
+chain_aaa_steps(Identifier, Secret, Request_Auth, [#mfa{module = Mod, function = Fun, args = Args} | More_Steps], Facts) ->
+  case apply(Mod, Fun, [Identifier, Secret, Request_Auth, Facts | Args]) of
+    {ok, New_Facts} ->
+      chain_aaa_steps(Identifier, Secret, Request_Auth, More_Steps, Facts ++ New_Facts);
+    {error, Reason} ->
+      {error, Reason}
+  end.
+
+make_decision(Identifier, Secret, Request_Auth, Facts) ->
+  Response_Attributes = er_tlv:response_facts_to_tlvs(Facts),
+  case lists:member(#fact{namespace = eradius, key = status, value = user_authenticated}, Facts) of
+    true ->
+      {ok, er_conv:accept(Identifier, Secret, Request_Auth, Response_Attributes)};
+    false ->
+      case lists:member(#fact{namespace = eradius, key = status, value = invalid_password}, Facts) of
+        true ->
+          {ok, er_conv:reject(Identifier, Secret, Request_Auth, Response_Attributes)};
+        false ->
+          case lists:member(#fact{namespace = eradius, key = status, value = issue_challenge}, Facts) of
+            true ->
+              Challenge = er_tlv:get_fact(eradius, challenge, Facts),
+              {ok, er_conv:challenge(Identifier, Secret, Request_Auth, Response_Attributes, Challenge)};
+            false ->
+              case lists:member(#fact{namespace = eradius, key = status, value = bad_response}, Facts) of
+                true ->
+                  {ok, er_conv:reject(Identifier, Secret, Request_Auth, Response_Attributes)};
+                false ->
+                  {error, "Authentication fell through."}
+              end
+          end
+      end
   end.

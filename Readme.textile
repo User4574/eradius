@@ -2,7 +2,7 @@ h1. eradius
 
 h2. What?
 
-p. eradius (pronounced "irradius" like irradiate) is a fledgling RFC2865 authentication server that I wrote in Erlang.
+p. eradius (pronounced "irradius" like irradiate) is a garbage RFC2865 authentication server that I wrote in Erlang.
 
 h2. Why?
 
@@ -10,15 +10,19 @@ p. I was bored.
 
 h2. Status
 
-p. It currently only authenticates users against a local DB, but the flexibility should be in to start adding auth modules.
+p. It has a very modular authentication/authorisation system, where an incoming request gets passed through a series of AAA steps which each add facts into the session. At the end, an action is taken based on one of several built-in facts.
 
-p. It currently doesn't do authorisation or accounting.
+p. It currently doesn't do accounting, or CoAs, or really anything useful.
 
-p. On the other hand it should be stupidly performant, because the config gets compiled in to the bytecode at consult-time, and it is built to make good use of SMP. I need to benchmark this.
+p. On the other hand it should be stupidly performant, because the config gets compiled in to the bytecode at consult-time, and it is built to make use of SMP. I have not benchmarked this.
 
-p. But also the code is -AWFUL at the moment- getting better.
+p. Since the config is compiled in, you have to rebuild eradius every time you change something, but that doesn't take long. It might if you start adding complex AAA steps.
 
-h2. How?
+p. Also the code is -AWFUL at the moment- getting better.
+
+h2. Running
+
+p. Configure the daemon in config.hrl.
 
 bc. $ make run
 % do auths

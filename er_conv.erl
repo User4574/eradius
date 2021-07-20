@@ -1,35 +1,18 @@
 -module(er_conv).
 
--export([accept/3, reject/3, challenge/4]).
+-export([accept/4, reject/4, challenge/5]).
 
 -include("eradius.hrl").
 
-accept(Identifier, Secret, Request_Auth) ->
-  Response_Attributes = [
-                         #tlv{
-                            type   = ?service_type,
-                            length = 6,
-                            value  = ?login
-                           },
-                         #tlv{
-                            type   = ?login_service,
-                            length = 6,
-                            value  = ?telnet
-                           },
-                         #tlv{
-                            type   = ?login_ip_host,
-                            length = 6,
-                            value  = <<192,168,1,3>>
-                           }
-                        ],
+construct_response(Type, Identifier, Secret, Request_Auth, Response_Attributes) ->
   Fledgling_Packet = #packet{
-     code       = ?access_accept,
+     code       = Type,
      identifier = Identifier,
      attributes = Response_Attributes
     },
   Length = er_packet:packet_length(Fledgling_Packet),
   Response_Auth = er_crypto:response_auth(
-                    ?access_accept,
+                    Type,
                     Identifier,
                     Length,
                     Request_Auth,
@@ -40,52 +23,22 @@ accept(Identifier, Secret, Request_Auth) ->
     authenticator = Response_Auth
    }.
 
-reject(Identifier, Secret, Request_Auth) ->
-  Fledgling_Packet = #packet{
-     code       = ?access_reject,
-     identifier = Identifier,
-     attributes = []
-    },
-  Length = er_packet:packet_length(Fledgling_Packet),
-  Response_Auth = er_crypto:response_auth(
-                    ?access_reject,
-                    Identifier,
-                    Length,
-                    Request_Auth,
-                    [],
-                    Secret),
-  Fledgling_Packet#packet{
-    length        = Length,
-    authenticator = Response_Auth
-   }.
+accept(Identifier, Secret, Request_Auth, Response_Attributes) ->
+  construct_response(?access_accept, Identifier, Secret, Request_Auth, Response_Attributes).
 
-challenge(Identifier, Secret, Request_Auth, Challenge) ->
-  Response_Attributes = [
-                         #tlv{
-                            type   = ?reply_message,
-                            length = 48,
-                            value  = <<"Challenge ", Challenge/binary, ".  Enter response at prompt.">>
-                           },
-                         #tlv{
-                            type   = ?state,
-                            length = byte_size(Challenge) + 2,
-                            value  = Challenge
-                           }
-                        ],
-  Fledgling_Packet = #packet{
-     code       = ?access_challenge,
-     identifier = Identifier,
-     attributes = Response_Attributes
-    },
-  Length = er_packet:packet_length(Fledgling_Packet),
-  Response_Auth = er_crypto:response_auth(
-                    ?access_challenge,
-                    Identifier,
-                    Length,
-                    Request_Auth,
-                    Response_Attributes,
-                    Secret),
-  Fledgling_Packet#packet{
-    length        = Length,
-    authenticator = Response_Auth
-   }.
+reject(Identifier, Secret, Request_Auth, Response_Attributes) ->
+  construct_response(?access_reject, Identifier, Secret, Request_Auth, Response_Attributes).
+
+challenge(Identifier, Secret, Request_Auth, Response_Attributes, Challenge) ->
+  Challenge_Attributes = [#tlv{
+                             type   = ?reply_message,
+                             length = 48,
+                             value  = <<"Challenge ", Challenge/binary, ".  Enter response at prompt.">>
+                            },
+                          #tlv{
+                             type   = ?state,
+                             length = byte_size(Challenge) + 2,
+                             value  = Challenge
+                            }
+                          | Response_Attributes],
+  construct_response(?access_challenge, Identifier, Secret, Request_Auth, Challenge_Attributes).

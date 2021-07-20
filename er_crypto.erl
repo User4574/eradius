@@ -5,7 +5,7 @@
 -include("eradius.hrl").
 
 response_auth(Code, Identifier, Length, Request_Auth, Response_Attributes, Secret) ->
-  Deparsed_TLVs = er_tlv:deparse_tlvs(Response_Attributes, <<>>),
+  Deparsed_TLVs = er_tlv:deparse_tlvs(Response_Attributes),
   crypto:hash(md5, <<
                      Code,
                      Identifier,

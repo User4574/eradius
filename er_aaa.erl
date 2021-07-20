@@ -4,27 +4,50 @@
 
 -include("eradius.hrl").
 
-local_password(Identifier, Secret, Request_Auth, Request_Attributes, Password) ->
-  UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
-  UserPassword = er_crypto:decrypt_password(UserPasswordCT, Secret, Request_Auth),
+local_password(_Identifier, _Secret, _Request_Auth, _Request_Facts, Password) ->
+  UserPassword = er_tlv:get_fact(tlv, ?user_password, _Request_Facts),
   case UserPassword =:= Password of
     true ->
-      {ok, er_conv:accept(Identifier, Secret, Request_Auth)};
+      {ok, [#fact{
+               namespace = eradius,
+               key = status,
+               value = user_authenticated
+              }]};
     false ->
-      {ok, er_conv:reject(Identifier, Secret, Request_Auth)}
+      {ok, [#fact{
+               namespace = eradius,
+               key = status,
+               value = invalid_password
+              }]}
   end.
 
-local_challenge(Identifier, Secret, Request_Auth, Request_Attributes, Challenge, Response) ->
-  case er_tlv:get_attr(?state, Request_Attributes) of
+local_challenge(_Identifier, _Secret, _Request_Auth, _Request_Facts, Challenge, _Response) ->
+  case er_tlv:get_fact(tlv, ?state, _Request_Facts) of
     false ->
-      {ok, er_conv:challenge(Identifier, Secret, Request_Auth, Challenge)};
+      {ok, [#fact{
+               namespace = eradius,
+               key = status,
+               value = issue_challenge
+              },
+            #fact{
+               namespace = eradius,
+               key = challenge,
+               value = Challenge
+              }]};
     Challenge ->
-      UserPasswordCT = er_tlv:get_attr(?user_password, Request_Attributes),
-      UserPassword = er_crypto:decrypt_password(UserPasswordCT, Secret, Request_Auth),
-      case UserPassword =:= Response of
+      UserPassword = er_tlv:get_fact(tlv, ?user_password, _Request_Facts),
+      case UserPassword =:= _Response of
         true ->
-          {ok, er_conv:accept(Identifier, Secret, Request_Auth)};
+          {ok, [#fact{
+                   namespace = eradius,
+                   key = status,
+                   value = user_authenticated
+                  }]};
         false ->
-          {ok, er_conv:reject(Identifier, Secret, Request_Auth)}
+          {ok, [#fact{
+                   namespace = eradius,
+                   key = status,
+                   value = bad_response
+                  }]}
       end
   end.

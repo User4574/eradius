@@ -13,14 +13,19 @@
 
 -record(user, {
           name,
-          authenticate,
-          authorise
+          aaa_steps
          }).
 
 -record(mfa, {
           module,
           function,
           args
+         }).
+
+-record(fact, {
+          namespace,
+          key,
+          value
          }).
 
 %%% RADIUS packet

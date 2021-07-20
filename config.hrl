@@ -14,28 +14,32 @@
 -define(userdb, [
                  #user{
                     name = <<"nemo">>,
-                    authenticate = #mfa{
-                                      module = er_aaa,
-                                      function = local_password,
-                                      args = [<<"arctangent">>]
-                                     },
-                    authorise = #mfa{
-                                   module = er_aaa,
-                                   function = ok,
-                                   args = []
-                                  }
+                    aaa_steps = [
+                                  #mfa{
+                                     module = er_aaa,
+                                     function = local_password,
+                                     args = [<<"arctangent">>]
+                                    },
+                                  #mfa{
+                                     module = er_test,
+                                     function = test_response,
+                                     args = []
+                                    }
+                                 ]
                    },
                  #user{
                     name = <<"mopsy">>,
-                    authenticate = #mfa{
-                                      module = er_aaa,
-                                      function = local_challenge,
-                                      args = [<<"32769430">>, <<"99101462">>]
-                                     },
-                    authorise = #mfa{
-                                   module = er_aaa,
-                                   function = ok,
-                                   args = []
-                                  }
+                    aaa_steps = [
+                                  #mfa{
+                                     module = er_aaa,
+                                     function = local_challenge,
+                                     args = [<<"32769430">>, <<"99101462">>]
+                                    },
+                                  #mfa{
+                                     module = er_test,
+                                     function = test_response,
+                                     args = []
+                                    }
+                                 ]
                    }
                 ]).

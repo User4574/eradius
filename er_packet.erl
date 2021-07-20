@@ -11,7 +11,7 @@ unpack(<<
          Authenticator:16/binary,
          Attributes:(Length-20)/binary
        >>) ->
-  TLVs = er_tlv:parse_tlvs(Attributes, []),
+  TLVs = er_tlv:parse_tlvs(Attributes),
   #packet{
      code          = Code,
      identifier    = Identifier,
@@ -27,7 +27,7 @@ pack(#packet{
         authenticator = Authenticator,
         attributes    = Attributes
        }) ->
-  Deparsed_TLVs = er_tlv:deparse_tlvs(Attributes, <<>>),
+  Deparsed_TLVs = er_tlv:deparse_tlvs(Attributes),
   <<
     Code:8,
     Identifier:8,

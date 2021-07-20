@@ -1,4 +1,4 @@
-Modules = er_tlv er_packet er_crypto er_aaa er_conv eradius
+Modules = er_tlv er_packet er_crypto er_aaa er_test er_conv eradius
 Headers = eradius config
 
 .PHONY: run clean edit
@@ -13,4 +13,4 @@ clean:
 	rm -f *.beam erl_crash.dump
 
 edit:
-	vim -p $(addsuffix .erl,${Modules}) $(addsuffix .hrl,${Headers})
+	vim -p $(addsuffix .erl,${Modules}) $(addsuffix .hrl,${Headers}) Makefile
