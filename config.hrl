@@ -11,35 +11,47 @@
                      }
                   ]).
 
--define(userdb, [
-                 #user{
-                    name = <<"nemo">>,
+-define(flowdb, [
+                 #flow{
+                    filter = [
+                              #filter_fact_exact{
+                                 namespace = tlv,
+                                 key = ?user_name,
+                                 value = <<"nemo">>
+                                }
+                             ],
                     aaa_steps = [
-                                  #mfa{
-                                     module = er_aaa,
-                                     function = local_password,
-                                     args = [<<"arctangent">>]
-                                    },
-                                  #mfa{
-                                     module = er_test,
-                                     function = test_response,
-                                     args = []
-                                    }
-                                 ]
+                                 #mfa{
+                                    module = er_aaa,
+                                    function = local_password,
+                                    args = [<<"arctangent">>]
+                                   },
+                                 #mfa{
+                                    module = er_test,
+                                    function = test_response,
+                                    args = []
+                                   }
+                                ]
                    },
-                 #user{
-                    name = <<"mopsy">>,
+                 #flow{
+                    filter = [
+                              #filter_fact_exact{
+                                 namespace = tlv,
+                                 key = ?user_name,
+                                 value = <<"mopsy">>
+                                }
+                             ],
                     aaa_steps = [
-                                  #mfa{
-                                     module = er_aaa,
-                                     function = local_challenge,
-                                     args = [<<"32769430">>, <<"99101462">>]
-                                    },
-                                  #mfa{
-                                     module = er_test,
-                                     function = test_response,
-                                     args = []
-                                    }
-                                 ]
+                                 #mfa{
+                                    module = er_aaa,
+                                    function = local_challenge,
+                                    args = [<<"32769430">>, <<"99101462">>]
+                                   },
+                                 #mfa{
+                                    module = er_test,
+                                    function = test_response,
+                                    args = []
+                                   }
+                                ]
                    }
                 ]).

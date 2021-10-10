@@ -13,20 +13,20 @@ function run_test {
   shift
   if [[ $pos == succeed ]]; then
     echo === Execute: $*
-    echo === Expect: Succeed
+    echo ??? Expect: Success
     if $*; then
-      echo "✓✓✓ Test succeeded."
+      echo "✓✓✓ Saw: Success"
       s=$((s + 1))
     else
-      echo "✗✗✗ Test failed."
+      echo "✗✗✗ Saw: Fail"
     fi
   else
     echo === Execute: $*
-    echo === Expect: Fail
+    echo ??? Expect: Fail
     if $*; then
-      echo "✗✗✗ Test succeeded."
+      echo "✗✗✗ Saw: Success"
     else
-      echo "✓✓✓ Test failed."
+      echo "✓✓✓ Saw: Fail"
       s=$((s + 1))
     fi
   fi

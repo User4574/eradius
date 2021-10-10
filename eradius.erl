@@ -44,7 +44,7 @@ despatcher(Socket) ->
 
 handler(_Socket, _IP, _Port, _Data) ->
   Request = er_packet:unpack(_Data),
-  io:format("Got packet:~n~p~n", [Request]),
+%  io:format("Got packet:~n~p~n", [Request]),
   SecretR = lists:keyfind(_IP, #client.host, ?secretdb),
   case SecretR of
     false ->
@@ -52,7 +52,7 @@ handler(_Socket, _IP, _Port, _Data) ->
     #client{secret = Secret} ->
       case respond(Secret, Request) of
         {ok, Response} ->
-          io:format("Returning packet:~n~p~n", [Response]),
+%          io:format("Returning packet:~n~p~n", [Response]),
           gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response));
         {error, Reason} ->
           io:format("Error, not responding:~n~p~n", [Reason])
@@ -66,12 +66,11 @@ respond(Secret, #packet{
                    attributes    = Request_Attributes
                   }) ->
   Request_Facts = er_tlv:cook_facts(Secret, Request_Auth, er_tlv:tlvs_to_facts(Request_Attributes)),
-  UserName = er_tlv:get_fact(tlv, ?user_name, Request_Facts),
-  case lists:keyfind(UserName, #user.name, ?userdb) of
+  case er_flow:get_flow(Request_Facts) of
     false ->
-      io:format("Incoming request username does not match any user in userdb.~n"),
+      io:format("Incoming request did not match any flow filter.~n"),
       {ok, er_conv:reject(Identifier, Secret, Request_Auth)};
-    #user{ aaa_steps = AAA_Steps } ->
+    #flow{aaa_steps = AAA_Steps} ->
       Computed_Facts = chain_aaa_steps(Identifier, Secret, Request_Auth, AAA_Steps, Request_Facts),
       make_decision(Identifier, Secret, Request_Auth, Computed_Facts)
   end.

@@ -11,11 +11,6 @@
           secret
          }).
 
--record(user, {
-          name,
-          aaa_steps
-         }).
-
 -record(mfa, {
           module,
           function,
@@ -23,6 +18,18 @@
          }).
 
 -record(fact, {
+          namespace,
+          key,
+          value
+         }).
+
+-record(flow, {
+          filter,
+          aaa_steps
+         }).
+
+%%% Flow filters
+-record(filter_fact_exact, {
           namespace,
           key,
           value
