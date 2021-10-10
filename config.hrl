@@ -53,5 +53,26 @@
                                     args = []
                                    }
                                 ]
+                   },
+                 #flow{
+                    filter = [
+                              #filter_fact_regexp{
+                                 namespace = tlv,
+                                 key = ?user_name,
+                                 regexp = ".*@example.com"
+                                },
+                              #filter_fact_exact{
+                                 namespace = eradius,
+                                 key = client_addr,
+                                 value = {127,0,0,1}
+                                }
+                             ],
+                    aaa_steps = [
+                                 #mfa{
+                                    module = er_test,
+                                    function = password_is_username,
+                                    args = []
+                                   }
+                                ]
                    }
                 ]).

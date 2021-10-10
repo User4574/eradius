@@ -46,11 +46,23 @@ handler(_Socket, _IP, _Port, _Data) ->
   Request = er_packet:unpack(_Data),
 %  io:format("Got packet:~n~p~n", [Request]),
   SecretR = lists:keyfind(_IP, #client.host, ?secretdb),
+  Client_Facts = [
+                  #fact{
+                     namespace = eradius,
+                     key = client_addr,
+                     value = _IP
+                    },
+                  #fact{
+                     namespace = eradius,
+                     key = client_port,
+                     value = _Port
+                    }
+                 ],
   case SecretR of
     false ->
       io:format("Incoming request source IP does not match any client in the database.~n");
     #client{secret = Secret} ->
-      case respond(Secret, Request) of
+      case respond(Secret, Client_Facts, Request) of
         {ok, Response} ->
 %          io:format("Returning packet:~n~p~n", [Response]),
           gen_udp:send(_Socket, _IP, _Port, er_packet:pack(Response));
@@ -59,17 +71,17 @@ handler(_Socket, _IP, _Port, _Data) ->
       end
   end.
 
-respond(Secret, #packet{
-                   code          = ?access_request,
-                   identifier    = Identifier,
-                   authenticator = Request_Auth,
-                   attributes    = Request_Attributes
-                  }) ->
-  Request_Facts = er_tlv:cook_facts(Secret, Request_Auth, er_tlv:tlvs_to_facts(Request_Attributes)),
+respond(Secret, Client_Facts, #packet{
+                                 code          = ?access_request,
+                                 identifier    = Identifier,
+                                 authenticator = Request_Auth,
+                                 attributes    = Request_Attributes
+                                }) ->
+  Request_Facts = Client_Facts ++ er_tlv:cook_facts(Secret, Request_Auth, er_tlv:tlvs_to_facts(Request_Attributes)),
   case er_flow:get_flow(Request_Facts) of
     false ->
       io:format("Incoming request did not match any flow filter.~n"),
-      {ok, er_conv:reject(Identifier, Secret, Request_Auth)};
+      {ok, er_conv:reject(Identifier, Secret, Request_Auth, [])};
     #flow{aaa_steps = AAA_Steps} ->
       Computed_Facts = chain_aaa_steps(Identifier, Secret, Request_Auth, AAA_Steps, Request_Facts),
       make_decision(Identifier, Secret, Request_Auth, Computed_Facts)

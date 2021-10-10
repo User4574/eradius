@@ -1,6 +1,6 @@
 -module(er_test).
 
--export([test_response/4]).
+-export([test_response/4, password_is_username/4, lgtm/4]).
 
 -include("eradius.hrl").
 
@@ -27,3 +27,34 @@ test_response(_, _, _, Facts) ->
     false ->
       {ok, []}
   end.
+
+password_is_username(_, _, _, Facts) ->
+  UN = er_tlv:get_fact(tlv, ?user_name, Facts),
+  PW = er_tlv:get_fact(tlv, ?user_password, Facts),
+  if
+    UN =:= PW ->
+      {ok, [
+            #fact{
+               namespace = eradius,
+               key = status,
+               value = user_authenticated
+              }
+           ]};
+    true ->
+      {ok, [
+            #fact{
+               namespace = eradius,
+               key = status,
+               value = invalid_password
+              }
+           ]}
+  end.
+
+lgtm(_, _, _, _) ->
+  {ok, [
+        #fact{
+           namespace = eradius,
+           key = status,
+           value = user_authenticated
+          }
+       ]}.

@@ -35,6 +35,13 @@
           value
          }).
 
+-record(filter_fact_regexp, {
+          namespace,
+          key,
+          regexp,
+          options = []
+         }).
+
 %%% RADIUS packet
 -record(packet, {
           code,

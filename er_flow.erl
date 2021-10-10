@@ -6,6 +6,7 @@
 -include("config.hrl").
 
 get_flow(Request_Facts) ->
+%  io:format("Got Facts: ~n~p~n", [Request_Facts]),
   test_flows(?flowdb, Request_Facts).
 
 test_flows([], _) ->
@@ -35,5 +36,26 @@ test_filters([Filter | Filters], Request_Facts) ->
           test_filters(Filters, Request_Facts);
         _ ->
           false
+      end;
+    #filter_fact_regexp{
+       namespace = Namespace,
+       key = Key,
+       regexp = Test_Regexp,
+       options = Regexp_Options
+      } ->
+      case er_tlv:get_fact(Namespace, Key, Request_Facts) of
+        false ->
+          false;
+        Found_Value ->
+          case re:run(Found_Value, Test_Regexp, Regexp_Options) of
+            {match, _Captured} ->
+              test_filters(Filters, Request_Facts);
+            match ->
+              test_filters(Filters, Request_Facts);
+            nomatch ->
+              false;
+            {error, _Error} ->
+              false
+          end
       end
   end.

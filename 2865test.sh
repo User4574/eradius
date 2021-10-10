@@ -60,5 +60,12 @@ User-Password = 99101462
 State = 0x3332373639343330
 .
 
+describe_test Regexp filters p1
+run_test succeed radtest test@example.com test@example.com localhost 20 xyzzy5461
+describe_test Regexp filters p2
+run_test succeed radtest testing@example.com testing@example.com localhost 20 xyzzy5461
+describe_test Regexp filters p3
+run_test fail radtest test@example.com testing@example.com localhost 20 xyzzy5461
+
 echo
 echo "Result: $s out of $t tests succeeded."
