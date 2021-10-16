@@ -29,6 +29,11 @@
          }).
 
 %%% Flow filters
+-record(filter_fact_exist, {
+          namespace,
+          key
+         }).
+
 -record(filter_fact_exact, {
           namespace,
           key,

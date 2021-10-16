@@ -25,13 +25,22 @@ test_filters([], _) ->
 
 test_filters([Filter | Filters], Request_Facts) ->
   case Filter of
+    #filter_fact_exist{
+       namespace = Namespace,
+       key = Key
+      } ->
+      case er_tlv:get_fact(Namespace, Key, Request_Facts) of
+        {ok, _} ->
+          test_filters(Filters, Request_Facts);;
+        _ ->
+          false
+      end;
     #filter_fact_exact{
        namespace = Namespace,
        key = Key,
        value = Test_Value
       } ->
-      Found_Value = er_tlv:get_fact(Namespace, Key, Request_Facts),
-      case Found_Value of
+      case er_tlv:get_fact(Namespace, Key, Request_Facts) of
         {ok, Test_Value} ->
           test_filters(Filters, Request_Facts);
         _ ->
