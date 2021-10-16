@@ -109,8 +109,12 @@ make_decision(Identifier, Secret, Request_Auth, Facts) ->
         false ->
           case lists:member(#fact{namespace = eradius, key = status, value = issue_challenge}, Facts) of
             true ->
-              Challenge = er_tlv:get_fact(eradius, challenge, Facts),
-              {ok, er_conv:challenge(Identifier, Secret, Request_Auth, Response_Attributes, Challenge)};
+              case er_tlv:get_fact(eradius, challenge, Facts) of
+                {ok, Challenge} ->
+                  {ok, er_conv:challenge(Identifier, Secret, Request_Auth, Response_Attributes, Challenge)};
+                _ ->
+                  {error, "Challenge missing."}
+              end;
             false ->
               case lists:member(#fact{namespace = eradius, key = status, value = bad_response}, Facts) of
                 true ->

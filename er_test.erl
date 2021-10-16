@@ -29,8 +29,8 @@ test_response(_, _, _, Facts) ->
   end.
 
 password_is_username(_, _, _, Facts) ->
-  UN = er_tlv:get_fact(tlv, ?user_name, Facts),
-  PW = er_tlv:get_fact(tlv, ?user_password, Facts),
+  {ok, UN} = er_tlv:get_fact(tlv, ?user_name, Facts),
+  {ok, PW} = er_tlv:get_fact(tlv, ?user_password, Facts),
   if
     UN =:= PW ->
       {ok, [

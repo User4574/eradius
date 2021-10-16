@@ -85,12 +85,12 @@ cook_facts(Secret, Request_Auth, [Raw_Fact | Raw_Facts], Cooked_Facts) ->
   cook_facts(Secret, Request_Auth, Raw_Facts, [Raw_Fact | Cooked_Facts]).
 
 get_fact(_, _, []) ->
-  false;
+  {error, key_not_found};
 get_fact(Namespace, Key, [#fact{
                              namespace = Namespace,
                              key = Key,
                              value = Value
                             } | _]) ->
-  Value;
+  {ok, Value};
 get_fact(Namespace, Key, [_ | Facts]) ->
   get_fact(Namespace, Key, Facts).

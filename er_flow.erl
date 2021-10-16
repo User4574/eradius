@@ -32,7 +32,7 @@ test_filters([Filter | Filters], Request_Facts) ->
       } ->
       Found_Value = er_tlv:get_fact(Namespace, Key, Request_Facts),
       case Found_Value of
-        Test_Value ->
+        {ok, Test_Value} ->
           test_filters(Filters, Request_Facts);
         _ ->
           false
@@ -44,9 +44,7 @@ test_filters([Filter | Filters], Request_Facts) ->
        options = Regexp_Options
       } ->
       case er_tlv:get_fact(Namespace, Key, Request_Facts) of
-        false ->
-          false;
-        Found_Value ->
+        {ok, Found_Value} ->
           case re:run(Found_Value, Test_Regexp, Regexp_Options) of
             {match, _Captured} ->
               test_filters(Filters, Request_Facts);
@@ -56,6 +54,8 @@ test_filters([Filter | Filters], Request_Facts) ->
               false;
             {error, _Error} ->
               false
-          end
+          end;
+        _ ->
+          false
       end
   end.
